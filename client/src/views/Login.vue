@@ -21,6 +21,7 @@
 
 <script>
 import { login, register } from "../../api/getData.js";
+import {aesEncrypt} from '../../utils/crypto.js'
 export default {
   name: "Login",
   data() {
@@ -39,7 +40,11 @@ export default {
   },
   methods: {
     handleLogin() {
-      login(this.loginParams).then(res => {
+      let {username,password} = this.loginParams
+      login({
+        username,
+        password: aesEncrypt(password)
+      }).then(res => {
         let { code, data, msg } = res;
         if (code === 0) {
           let { token_type, access_token } = data;
@@ -51,7 +56,12 @@ export default {
       });
     },
     handleRegister() {
-      register(this.regParams).then(res => {
+      let {username,nickname,password} = this.regParams
+      register({
+        username,
+        nickname,
+        password: aesEncrypt(password)
+      }).then(res => {
         console.log(res);
       });
     }

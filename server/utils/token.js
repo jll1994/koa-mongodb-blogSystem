@@ -14,6 +14,7 @@ module.exports = {
   async verifyToken(ctx, next) {
     let url = ctx.url;
     if (!URL_YES_PASS.includes(url)) {
+      // ctx.get("Authorization") 获取前端请求体中的信息
       let token = ctx.get("Authorization").split(" ")[1];
       if (token == "") {
         // 直接抛出错误
@@ -31,6 +32,8 @@ module.exports = {
           ctx.response.body = "登录过期，请重新登录!";
           return;
         }
+        // 保存用户的_id，便于操作
+        ctx._id = res._id;
       } catch (e) {
         ctx.response.status = 401;
         ctx.response.body = "登录已过期请重新登录!";

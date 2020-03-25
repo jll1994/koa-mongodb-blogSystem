@@ -8,7 +8,6 @@ axios.defaults.baseURL = "/api";
 axios.interceptors.request.use(
   config => {
     let token = localStorage.getItem("token");
-    console.log(config.url);
     if (token && config.url != "/user/login") {
       config.headers.Authorization = token;
     }

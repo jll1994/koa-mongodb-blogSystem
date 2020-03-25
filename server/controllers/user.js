@@ -1,10 +1,12 @@
 const { UserModel } = require("../models");
-const { TOKEN_ENCODE_STR, TOKEN_TYPE } = require("../utils/config");
+const { TOKEN_TYPE } = require("../utils/config");
 const { generateToken } = require("../utils/token");
 const { callbackModel } = require("../utils/index");
+const { aesDecrypt } = require("../utils/crypto");
 
 let register = async ctx => {
-  let { username = "", nickname = "", password = "" } = ctx.request.body;
+  let { username, nickname, password } = ctx.request.body;
+  let decryptPwd = aesDecrypt(password); // 解密
   try {
     if (username === "") {
       callbackModel(ctx, 1, null, "用户名不能为空");
@@ -23,7 +25,7 @@ let register = async ctx => {
       callbackModel(ctx, 1, "该用户名已存在");
       return;
     }
-    let user = new UserModel({ username, nickname, password });
+    let user = new UserModel({ username, nickname, password: decryptPwd });
     res = await user.save();
     if (res._id != null) {
       callbackModel(ctx, 0, {}, "注册成功");
@@ -37,7 +39,8 @@ let register = async ctx => {
 
 let login = async ctx => {
   let { username, password } = ctx.request.body;
-  let user = await UserModel.findOne({ username, password });
+  let decryptPwd = aesDecrypt(password); // 解密
+  let user = await UserModel.findOne({ username, password: decryptPwd });
   if (user) {
     const user_id = user._id;
     callbackModel(
@@ -53,11 +56,8 @@ let login = async ctx => {
     callbackModel(ctx, 1, null, "登录失败，用户名或者密码错误");
   }
 };
-const jwt = require("jsonwebtoken");
 let getUserInfo = async ctx => {
-  // ctx.get("Authorization") 获取请求中的数据
-  let token = ctx.get("Authorization").split(" ")[1];
-  let { _id } = await jwt.verify(token, TOKEN_ENCODE_STR);
+  let _id = ctx._id;
   try {
     let res = await UserModel.findOne(
       { _id },

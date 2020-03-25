@@ -1,8 +1,5 @@
-// 引入路由中间件
 const Router = require("koa-router");
 const { apiPrefix } = require("../config");
-
-// 实例化路由
 let router = new Router({
   prefix: apiPrefix
 });
