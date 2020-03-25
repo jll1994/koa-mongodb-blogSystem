@@ -4,7 +4,20 @@ import qs from "qs";
 export const login = params => {
   return axios({
     method: "post",
-    url: "/api/login",
+    url: "/user/login",
     data: params
   });
+};
+// 注册
+export const register = params => {
+  return axios({
+    method: "post",
+    url: "/user/register",
+    data: params
+  });
+};
+
+// 用户信息
+export const getCurrentUserInfo = params => {
+  return axios.get(`/user`);
 };

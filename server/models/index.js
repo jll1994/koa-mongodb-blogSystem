@@ -1,6 +1,7 @@
 const mongoose = require("../db/connection");
 let { Schema, model } = mongoose;
 
+// 用户
 const userSchema = Schema({
   username: {
     type: String,
@@ -24,6 +25,11 @@ const userSchema = Schema({
   }
 });
 
-const UserModel = model("users", userSchema);
+// 验证码
+const checkcodeSchema = Schema({
+  token: String,
+  code: String
+});
 
-module.exports = UserModel;
+exports.UserModel = model("users", userSchema);
+exports.Checkcode = model("checkcode", checkcodeSchema);

@@ -11,7 +11,9 @@ let router = new Router({
     接口开发
 */
 const controller = require("../controllers");
-router.post("/login", controller.user.login); // 登录
+router.post("/user/login", controller.user.login); // 登录
+router.post("/user/register", controller.user.register); // 注册
+router.get("/user", controller.user.getUserInfo); // 用户信息
 
 // 导出路由
 module.exports = router;
