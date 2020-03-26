@@ -56,6 +56,7 @@ let login = async ctx => {
     callbackModel(ctx, 1, null, "登录失败，用户名或者密码错误");
   }
 };
+
 let getUserInfo = async ctx => {
   let _id = ctx._id;
   try {

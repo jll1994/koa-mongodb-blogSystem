@@ -13,7 +13,8 @@ module.exports = {
   */
   async verifyToken(ctx, next) {
     let url = ctx.url;
-    if (!URL_YES_PASS.includes(url)) {
+    // 考虑到url地址中可能包含参数?key=value
+    if (url.indexOf(URL_YES_PASS) !== -1) {
       // ctx.get("Authorization") 获取前端请求体中的信息
       let token = ctx.get("Authorization").split(" ")[1];
       if (token == "") {

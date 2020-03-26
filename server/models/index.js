@@ -14,22 +14,7 @@ const userSchema = Schema({
   password: {
     type: String,
     default: ""
-  },
-  avatar: {
-    type: String,
-    default: ""
-  },
-  token: {
-    type: String,
-    default: ""
   }
 });
 
-// 验证码
-const checkcodeSchema = Schema({
-  token: String,
-  code: String
-});
-
 exports.UserModel = model("users", userSchema);
-exports.Checkcode = model("checkcode", checkcodeSchema);

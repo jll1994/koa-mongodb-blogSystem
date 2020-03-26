@@ -18,6 +18,13 @@ export const register = params => {
 };
 
 // 用户信息
-export const getCurrentUserInfo = params => {
+export const getCurrentUserInfo = () => {
   return axios.get(`/user`);
+};
+// 验证码
+export const getCaptcha = () => {
+  return axios.get(`/captcha`);
+};
+export const verifyCode = params => {
+  return axios.get(`/verifyCode?code=${params}`);
 };

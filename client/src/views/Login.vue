@@ -14,19 +14,22 @@
       <input type="text" placeholder="用户名" v-model="regParams.username"><br>
       <input type="text" placeholder="昵称" v-model="regParams.nickname"><br>
       <input type="password" placeholder="密码" v-model="regParams.password"><br>
+      <input type="text" maxlength="4" placeholder="验证码" v-model="regParams.code" @input="handleInput">
+      <span v-html="svgData" @click="changeCaptcha"></span>
+      <br>
       <button @click="handleRegister">注册</button>
     </template>
   </div>
 </template>
 
 <script>
-import { login, register } from "../../api/getData.js";
-import {aesEncrypt} from '../../utils/crypto.js'
+import { login, register, getCaptcha, verifyCode } from "@/api/getData.js";
+import { aesEncrypt } from "@/utils/crypto.js";
 export default {
   name: "Login",
   data() {
     return {
-      type: "login",
+      type: "register",
       loginParams: {
         username: "admin",
         password: "123456"
@@ -34,13 +37,18 @@ export default {
       regParams: {
         username: "",
         nickname: "",
-        password: ""
-      }
+        password: "",
+        code: ""
+      },
+      svgData: ""
     };
+  },
+  created() {
+    this.changeCaptcha();
   },
   methods: {
     handleLogin() {
-      let {username,password} = this.loginParams
+      let { username, password } = this.loginParams;
       login({
         username,
         password: aesEncrypt(password)
@@ -56,14 +64,39 @@ export default {
       });
     },
     handleRegister() {
-      let {username,nickname,password} = this.regParams
+      let { username, nickname, password } = this.regParams;
       register({
         username,
         nickname,
         password: aesEncrypt(password)
       }).then(res => {
-        console.log(res);
+        let { code, msg } = res;
+        if (code === 0) {
+          this.type = "login";
+        } else {
+          window.alert(msg);
+        }
       });
+    },
+    changeCaptcha() {
+      getCaptcha().then(res => {
+        if (res) {
+          this.svgData = res;
+        }
+      });
+    },
+    handleInput(e) {
+      let value = e.target.value;
+      if (value.length === 4) {
+        verifyCode(this.regParams.code).then(res => {
+          let { code, data, msg } = res;
+          if (code === 0) {
+            
+          } else {
+            window.alert(msg);
+          }
+        });
+      }
     }
   }
 };

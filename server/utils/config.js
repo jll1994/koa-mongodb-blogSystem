@@ -5,5 +5,10 @@ module.exports = {
   TOKEN_ENCODE_STR: "token_encode_str",
   TOKEN_TYPE: "Bearer",
   // 添加非get请求通过的连接
-  URL_YES_PASS: ["/api/user/register", "/api/user/login"]
+  URL_YES_PASS: [
+    "/api/user/register",
+    "/api/user/login",
+    "/api/captcha",
+    "/api/verifyCode"
+  ]
 };
