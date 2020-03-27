@@ -28,3 +28,20 @@ export const getCaptcha = () => {
 export const verifyCode = params => {
   return axios.get(`/verifyCode?code=${params}`);
 };
+// 文件资源
+export const fileUpload = params => {
+  return axios({
+    method: "post",
+    headers: {
+      "Content-Type": "multipart/form-data"
+    },
+    url: "/storage",
+    data: params
+  });
+};
+export const fileDelete = params => {
+  return axios({
+    method: "delete",
+    url: "/storage?fileName=" + params
+  });
+};

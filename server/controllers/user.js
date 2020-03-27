@@ -1,6 +1,6 @@
 const { UserModel } = require("../models");
 const { TOKEN_TYPE } = require("../utils/config");
-const { generateToken } = require("../utils/token");
+const { generateToken } = require("../middleware/token");
 const { callbackModel } = require("../utils/index");
 const { aesDecrypt } = require("../utils/crypto");
 

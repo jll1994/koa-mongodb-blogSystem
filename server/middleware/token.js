@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const { TOKEN_ENCODE_STR, URL_YES_PASS } = require("./config");
-const { UserModel, Checkcode } = require("../models");
+const { TOKEN_ENCODE_STR, URL_YES_PASS } = require("../utils/config");
+const { UserModel } = require("../models");
 
 module.exports = {
   // 生成token
@@ -13,8 +13,7 @@ module.exports = {
   */
   async verifyToken(ctx, next) {
     let url = ctx.url;
-    // 考虑到url地址中可能包含参数?key=value
-    if (url.indexOf(URL_YES_PASS) !== -1) {
+    if (!URL_YES_PASS.includes(url)) {
       // ctx.get("Authorization") 获取前端请求体中的信息
       let token = ctx.get("Authorization").split(" ")[1];
       if (token == "") {

@@ -1,4 +1,4 @@
-const mongoose = require("../db/connection");
+const mongoose = require("../db/connect");
 let { Schema, model } = mongoose;
 
 // 用户
