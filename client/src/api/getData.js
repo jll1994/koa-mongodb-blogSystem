@@ -21,6 +21,13 @@ export const register = params => {
 export const getCurrentUserInfo = () => {
   return axios.get(`/user`);
 };
+export const updateNickname = params => {
+  return axios({
+    method: "put",
+    url: "/user/updateNickname",
+    data: params
+  });
+};
 // 验证码
 export const getCaptcha = () => {
   return axios.get(`/captcha`);
@@ -43,5 +50,32 @@ export const fileDelete = params => {
   return axios({
     method: "delete",
     url: "/storage?fileName=" + params
+  });
+};
+// 文章
+export const getArticleList = () => {
+  return axios.get(`/article`);
+};
+export const getArticleInfoById = params => {
+  return axios.get(`/article/${params}`);
+};
+export const publishArticle = params => {
+  return axios({
+    method: "post",
+    url: "/article",
+    data: params
+  });
+};
+export const deleteArticle = params => {
+  return axios({
+    method: "delete",
+    url: "/article/" + params
+  });
+};
+export const addComment = params => {
+  return axios({
+    method: "post",
+    url: "/comment",
+    data: params
   });
 };

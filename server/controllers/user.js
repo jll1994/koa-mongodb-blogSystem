@@ -73,8 +73,20 @@ let getUserInfo = async ctx => {
   }
 };
 
+let updateNickname = async ctx => {
+  let { nickname } = ctx.request.body;
+  let _id = ctx._id;
+  let res = await UserModel.updateOne({ _id }, { $set: { nickname } });
+  if (res) {
+    callbackModel(ctx, 0, null, "昵称修改成功");
+  } else {
+    callbackModel(ctx, 1, null, "昵称修改失败");
+  }
+};
+
 module.exports = {
   register,
   login,
-  getUserInfo
+  getUserInfo,
+  updateNickname
 };

@@ -1,6 +1,7 @@
 import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
+import "./assets/css/reset.css";
 
 import axios from "axios";
 axios.defaults.baseURL = "/api";
@@ -23,6 +24,15 @@ axios.interceptors.response.use(
     return response.data;
   },
   error => {
+    switch (error.response.status) {
+      case 401:
+        router.replace({
+          path: "/"
+        });
+        break;
+      default:
+        break;
+    }
     return Promise.reject(error.response);
   }
 );

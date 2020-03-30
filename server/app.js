@@ -6,7 +6,6 @@ const bouncer = require("koa-bouncer");
 const koaBody = require("koa-body");
 const static = require("koa-static");
 const path = require("path");
-const { port } = require("./config");
 const { verifyToken } = require("./middleware/token");
 // 实例化koa
 const app = new Koa();
@@ -49,14 +48,14 @@ app.use(
 );
 
 // routes
-const Routes = require("./router/index");
-app.use(Routes.routes()).use(Routes.allowedMethods());
+const routers = require("./router");
+app.use(routers.routes()).use(routers.allowedMethods());
 
 app.on("error", (err, ctx) => {
   console.log("server error", err);
 });
 
 // 设置端口监听
-app.listen(port, () => {
-  console.log(`server is running on port ${port}`);
+app.listen(8191, () => {
+  console.log(`server is running on port 8191`);
 });
