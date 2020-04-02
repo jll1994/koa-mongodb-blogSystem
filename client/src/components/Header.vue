@@ -1,26 +1,18 @@
 <template>
-    <ul class="header-container">
-        <li>
-            <router-link to='/home'>首页</router-link>
-        </li>
-        <li>
-            <router-link to='/article'>文章</router-link>
-        </li>
-        <li>
-            <router-link to='/message'>留言板</router-link>
-        </li>
-        <li>
-            <router-link to='/profile'>个人中心</router-link>
-        </li>
-    </ul>
+    <div>
+        <el-menu :default-active="$route.path" router mode="horizontal" background-color="#545c64" text-color="#fff" active-text-color="#ffd04b">
+            <el-menu-item index="/home">首页</el-menu-item>
+            <el-menu-item index="/article">文章</el-menu-item>
+            <el-menu-item index="/message">留言板</el-menu-item>
+            <el-menu-item index="/profile">个人中心</el-menu-item>
+        </el-menu>
+    </div>
 </template>
-<style lang="less" scoped>
-.header-container {
-  display: flex;
-  align-items: center;
-  li {
-    padding: 10px 10px;
+<script>
+export default {
+  data() {
+    return {};
   }
-}
-</style>
+};
+</script>
 

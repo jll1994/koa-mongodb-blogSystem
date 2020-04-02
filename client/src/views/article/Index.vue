@@ -1,48 +1,87 @@
 <template>
   <div>
-    <h1>这是文章列表页面</h1>
-    <div class="article-container">
-      <div class="article-list">
-        <div class="item" v-for="item in articleList" :key="item.id" @click="goArticleDetail(item.id)">
-          <div class="date">{{item.created}}</div>
-          <div class="title">{{item.title}}</div>
-          <span class="del" @click="handleDeleteArticle(item.id)">删除</span>
-        </div>
+    <div>
+      <el-button type="primary" @click="$router.push('/addOrEditArticle')">添加文章</el-button>
+      <el-button type="primary" @click="handleAddCategory">添加文章类型</el-button>
+      <div class="tags">
+        <el-tag :key="item._id" v-for="item in categoryList" closable :disable-transitions="false" @close="handleDeleteCategory(item._id)">
+          {{item.title}}
+        </el-tag>
       </div>
-      <form class="article-form">
-        <div class="form-item">
-          <label>文章标题：</label>
-          <input v-model="params.title" type="text" placeholder="请输入文章标题">
-        </div>
-        <div class="form-item">
-          <label>文章正文：</label>
-          <textarea v-model="params.content" cols="30" rows="10" placeholder="请输入文章文正"></textarea>
-        </div>
-        <div class="form-item">
-          <button @click="handleArticleSubmit">提交</button>
-        </div>
-      </form>
+    </div>
+    <div class="article-list" v-for="item in articleList" :key="item.id" @click="goArticleDetail(item.id)">
+      <div class="head flexjbac">
+        <div class="title">{{item.title}}</div>
+        <div class="date">{{item.created}}</div>
+      </div>
+      <div class="body">
+        <div class="category">分类：{{item.category}}</div>
+        <div class="description">文章描述内容</div>
+      </div>
     </div>
   </div>
 </template>
 <script>
-import { getArticleList, publishArticle, deleteArticle } from "@/api/getData";
+import {
+  getCategoryList,
+  addCategory,
+  deleteCategory,
+  getArticleList,
+  deleteArticle
+} from "@/api/getData";
 export default {
   inject: ["app"],
   data() {
     return {
-      articleList: [],
-      params: {
-        userid: "",
-        title: "",
-        content: ""
-      }
+      categoryList: [],
+      articleList: []
     };
   },
   mounted() {
+    this.getCategoryList();
     this.getArticlePaged();
   },
   methods: {
+    getCategoryList() {
+      getCategoryList().then(res => {
+        let { code, data, msg } = res;
+        if (code === 0) {
+          this.categoryList = data;
+        } else {
+          this.$message.error(msg);
+        }
+      });
+    },
+    handleAddCategory() {
+      this.$msgBox
+        .prompt("请输入分类标题", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消"
+        })
+        .then(({ value }) => {
+          addCategory({
+            title: value
+          }).then(res => {
+            let { code, msg } = res;
+            if (code === 0) {
+              this.getCategoryList();
+              this.$message.success("创建成功");
+            } else {
+              this.$message.error(msg);
+            }
+          });
+        });
+    },
+    handleDeleteCategory(id) {
+      deleteCategory(id).then(res => {
+        let { code, msg } = res;
+        if (code === 0) {
+          this.getCategoryList();
+        } else {
+          this.$message.error(msg);
+        }
+      });
+    },
     getArticlePaged() {
       getArticleList().then(res => {
         let { code, data, msg } = res;
@@ -60,22 +99,7 @@ export default {
         let { code, msg } = res;
         if (code === 0) {
           this.getArticlePaged();
-          window.alert("删除成功！");
-        }
-      });
-    },
-    handleArticleSubmit(e) {
-      e.preventDefault();
-      this.params.userid = this.app.userInfo._id;
-      publishArticle(this.params).then(res => {
-        let { code, msg } = res;
-        if (code === 0) {
-          this.params.title = "";
-          this.params.content = "";
-          this.getArticlePaged();
-          window.alert("文章发布成功！");
-        } else {
-          window.alert(msg);
+          this.$message.success("删除成功！");
         }
       });
     },
@@ -87,43 +111,51 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.article-container {
-  width: 1120px;
-  margin: 20px auto;
-  display: flex;
-  align-items: flex-start;
-  .article-list,
-  .article-form {
-    padding: 20px;
-    border: 1px solid #ccc;
+.tags {
+  margin-top: 20px;
+  .el-tag + .el-tag {
+    margin-left: 10px;
   }
-  .article-list {
-    flex: 2;
-    margin-right: 30px;
-    .item {
-      display: flex;
-      align-items: center;
-      height: 45px;
-      .date {
-        width: 100px;
-      }
-      .title {
-        flex: 1;
-      }
-      .del {
-        color: red;
-        cursor: default;
-      }
+}
+.article-list {
+  margin-top: 25px;
+  background: #f6f6f6;
+  border-radius: 10px;
+  box-shadow: 0 0 5px 0 #aaa;
+  width: 100%;
+  &:hover {
+    background: rgba(96, 126, 121, 0.18);
+  }
+  cursor: pointer;
+  .head {
+    height: 50px;
+    padding: 0 25px;
+    box-shadow: 0 5px 5px -5px #aaa;
+    .title {
+      flex: 1;
+      font-size: 25px;
+      letter-spacing: 5px;
+      color: #607e79;
+      width: 100%;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .date {
+      color: #7b7b7b;
+      margin-left: 10px;
+      font-size: 12px;
     }
   }
-  .article-form {
-    flex: 1;
-    .form-item {
-      margin-bottom: 20px;
-      label {
-        display: inline-block;
-        vertical-align: top;
-      }
+  .body {
+    padding: 0 25px;
+    .category {
+      font-size: 14px;
+      color: #7b7b7b;
+      margin-top: 10px;
+    }
+    .description {
+      padding: 12px 0 20px;
     }
   }
 }

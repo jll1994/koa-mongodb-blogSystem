@@ -1,11 +1,10 @@
 const { UserModel } = require("../models");
-const { TOKEN_TYPE } = require("../utils/config");
 const { generateToken } = require("../middleware/token");
 const { callbackModel } = require("../utils/index");
 const { aesDecrypt } = require("../utils/crypto");
-
+const mongoose = require("mongoose");
 let register = async ctx => {
-  let { username, nickname, password } = ctx.request.body;
+  let { username, nickname, password, avatar, code } = ctx.request.body;
   let decryptPwd = aesDecrypt(password); // 解密
   try {
     if (username === "") {
@@ -25,10 +24,26 @@ let register = async ctx => {
       callbackModel(ctx, 1, "该用户名已存在");
       return;
     }
-    let user = new UserModel({ username, nickname, password: decryptPwd });
+    let user = new UserModel({
+      username,
+      nickname,
+      password: decryptPwd,
+      avatar
+    });
     res = await user.save();
     if (res._id != null) {
-      callbackModel(ctx, 0, {}, "注册成功");
+      let token = generateToken({ _id: res._id });
+      callbackModel(
+        ctx,
+        0,
+        {
+          _id: res._id,
+          nickname,
+          avatar,
+          token
+        },
+        "注册成功"
+      );
     } else {
       callbackModel(ctx, 1, null, "注册失败，服务器异常");
     }
@@ -47,8 +62,7 @@ let login = async ctx => {
       ctx,
       0,
       {
-        token_type: TOKEN_TYPE,
-        access_token: generateToken({ _id: user_id })
+        token: generateToken({ _id: user_id })
       },
       "登录成功"
     );
@@ -64,7 +78,8 @@ let getUserInfo = async ctx => {
       { _id },
       {
         username: true,
-        nickname: true
+        nickname: true,
+        avatar: true
       }
     );
     callbackModel(ctx, 0, res, "查询成功");
@@ -84,9 +99,21 @@ let updateNickname = async ctx => {
   }
 };
 
+let updateAvatar = async ctx => {
+  let { avatar } = ctx.request.body;
+  let _id = ctx._id;
+  let res = await UserModel.updateOne({ _id }, { $set: { avatar } });
+  if (res) {
+    callbackModel(ctx, 0, null, "头像修改成功");
+  } else {
+    callbackModel(ctx, 1, null, "头像修改失败");
+  }
+};
+
 module.exports = {
   register,
   login,
   getUserInfo,
-  updateNickname
+  updateNickname,
+  updateAvatar
 };

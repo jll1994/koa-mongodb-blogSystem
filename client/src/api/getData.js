@@ -24,7 +24,14 @@ export const getCurrentUserInfo = () => {
 export const updateNickname = params => {
   return axios({
     method: "put",
-    url: "/user/updateNickname",
+    url: "/user/nickname",
+    data: params
+  });
+};
+export const updateAvatar = params => {
+  return axios({
+    method: "put",
+    url: "/user/avatar",
     data: params
   });
 };
@@ -52,6 +59,23 @@ export const fileDelete = params => {
     url: "/storage?fileName=" + params
   });
 };
+// 分类
+export const getCategoryList = () => {
+  return axios.get(`/category`);
+};
+export const addCategory = params => {
+  return axios({
+    method: "post",
+    url: "/category",
+    data: params
+  });
+};
+export const deleteCategory = params => {
+  return axios({
+    method: "delete",
+    url: "/category/" + params
+  });
+};
 // 文章
 export const getArticleList = () => {
   return axios.get(`/article`);
@@ -72,10 +96,20 @@ export const deleteArticle = params => {
     url: "/article/" + params
   });
 };
+export const getCommentList = params => {
+  return axios.get(`/comment?aid=${params}`);
+};
 export const addComment = params => {
   return axios({
     method: "post",
     url: "/comment",
+    data: params
+  });
+};
+export const likeComment = params => {
+  return axios({
+    method: "put",
+    url: "/comment/like",
     data: params
   });
 };

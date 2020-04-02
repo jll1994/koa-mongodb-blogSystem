@@ -1,7 +1,47 @@
-const { ArticleModel, CommentModel } = require("../models");
+const { ArticleModel, CategoryModel, CommentModel } = require("../models");
 const { callbackModel } = require("../utils/index");
-const formatTime = require("../utils/formatTime");
+// 分类
+let createCategory = async ctx => {
+  let { title } = ctx.request.body;
+  if (title === "") {
+    callbackModel(ctx, 1, null, "分类标题不能为空");
+    return;
+  }
+  let result = await CategoryModel.find({ title });
+  if (result.length !== 0) {
+    callbackModel(ctx, 1, null, "该分类已经存在了，请再换一个试试吧");
+    return;
+  }
+  let category = new CategoryModel({ title });
+  let res = category.save();
+  if (res) {
+    callbackModel(ctx, 0, null, "创建成功");
+  } else {
+    ctx.status = 500;
+  }
+};
 
+let getCategoryList = async ctx => {
+  let res = await CategoryModel.find();
+  if (res) {
+    callbackModel(ctx, 0, res, "数据获取成功");
+  } else {
+    ctx.status = 500;
+  }
+};
+
+let deleteCategory = async ctx => {
+  let _id = ctx.params.id;
+  let res = await CategoryModel.findByIdAndRemove(_id);
+  if (res) {
+    callbackModel(ctx, 0, null, "删除成功");
+  } else {
+    ctx.status = 500;
+    callbackModel(ctx, 1, null, "删除失败，服务器异常");
+  }
+};
+
+// 文章
 let getArticleList = async ctx => {
   let pageSize = ctx.query.pageSize || 10; // 每页数量
   let pageNum = ctx.query.paageNum || 1; // 当前页码
@@ -9,14 +49,18 @@ let getArticleList = async ctx => {
     skip: Number((pageNum - 1) * pageSize),
     limit: Number(pageSize)
   };
-  let res = await ArticleModel.find({}, null, options);
+  let res = await ArticleModel.find({}, null, options).populate(
+    "cid",
+    "-_id title"
+  );
   if (res) {
     let newArr = res.map(item => {
       return {
         id: item._id,
         title: item.title,
         content: item.content,
-        created: item.date
+        category: item.cid ? item.cid.title : "",
+        created: item.createTime
       };
     });
     let total = await ArticleModel.countDocuments();
@@ -36,17 +80,18 @@ let getArticleList = async ctx => {
 
 let getArticleInfoById = async ctx => {
   let _id = ctx.params.id;
-  let res = await ArticleModel.findById(_id);
+  let res = await ArticleModel.findById(_id).populate("cid", "-_id title");
   if (res) {
     callbackModel(
       ctx,
       0,
       {
         id: res._id,
-        userid: res.userid,
+        uid: res.uid,
         title: res.title,
         content: res.content,
-        created: res.date
+        category: res.cid ? res.cid.title : "",
+        createTime: res.createTime
       },
       "查询成功"
     );
@@ -56,9 +101,17 @@ let getArticleInfoById = async ctx => {
 };
 
 let createArticle = async ctx => {
-  const { userid, title, content } = ctx.request.body;
+  const { uid, title, categoryId, description, content } = ctx.request.body;
   if (title === "") {
     callbackModel(ctx, 1, null, "文章标题不能为空");
+    return;
+  }
+  if (categoryId === "") {
+    callbackModel(ctx, 1, null, "请选择一个文章分类");
+    return;
+  }
+  if (description === "") {
+    callbackModel(ctx, 1, null, "文章描述不能为空");
     return;
   }
   if (content === "") {
@@ -66,10 +119,10 @@ let createArticle = async ctx => {
     return;
   }
   let article = new ArticleModel({
-    userid,
+    uid,
     title,
-    content,
-    date: formatTime(new Date())
+    cid: categoryId,
+    content
   });
   let res = await article.save();
   if (res) {
@@ -89,19 +142,96 @@ let deleteArticle = async ctx => {
   }
 };
 
+// 评论
+let getCommentList = async ctx => {
+  let { aid } = ctx.query;
+  // 连表查询
+  let res = await CommentModel.find({ aid }).populate("uid", "nickname avatar");
+  if (res) {
+    let tempArr = res.map(item => {
+      let map = {};
+      map["avatar"] = item.uid.avatar;
+      map["nickname"] = item.uid.nickname;
+      map["uid"] = item.uid._id;
+      map["_id"] = item._id;
+      map["content"] = item.content;
+      map["thumbup"] = item.thumbup;
+      map["createTime"] = item.createTime;
+      return map;
+    });
+    callbackModel(ctx, 0, tempArr, "查询成功");
+  } else {
+    ctx.status = 500;
+  }
+};
+
 let addComment = async ctx => {
-  let { content } = ctx.request.body;
+  let { uid, aid, content } = ctx.request.body;
   if (content === "") {
     callbackModel(ctx, 1, null, "评论内容不能为空");
     return;
   }
-  ctx.body = "添加评论成功";
+  let comment = new CommentModel({
+    uid,
+    aid,
+    content
+  });
+  let res = await comment.save();
+  if (res) {
+    callbackModel(ctx, 0, null, "添加评论成功");
+  } else {
+    ctx.status = 500;
+  }
+};
+
+let likeComment = async ctx => {
+  let { _id, uid } = ctx.request.body;
+  let result = await CommentModel.findOne(
+    { _id },
+    { uid: true, thumbup: true, isLike: true }
+  );
+  if (result) {
+    if (uid.toString() === result.uid.toString()) {
+      // 表示是自己的评论
+      callbackModel(ctx, 1, null, "不能给自己的评论点赞哟");
+    } else {
+      if (result.isLike) {
+        // 已点赞
+        let res = await CommentModel.findOneAndUpdate(
+          { _id },
+          { $set: { thumbup: --result.thumbup, isLike: false } },
+          { new: true }
+        );
+        if (res) {
+          callbackModel(ctx, 0, null, "取消点赞");
+        } else {
+          ctx.status = 500;
+        }
+      } else {
+        let res = await CommentModel.findOneAndUpdate(
+          { _id },
+          { $set: { thumbup: ++result.thumbup, isLike: true } },
+          { new: true }
+        );
+        if (res) {
+          callbackModel(ctx, 0, null, "点赞成功");
+        } else {
+          ctx.status = 500;
+        }
+      }
+    }
+  }
 };
 
 module.exports = {
+  createCategory,
+  getCategoryList,
+  deleteCategory,
   createArticle,
   getArticleList,
   getArticleInfoById,
   deleteArticle,
-  addComment
+  getCommentList,
+  addComment,
+  likeComment
 };

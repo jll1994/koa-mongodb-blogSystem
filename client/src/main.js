@@ -1,7 +1,9 @@
 import Vue from "vue";
 import App from "./App.vue";
 import router from "./router";
-import "./assets/css/reset.css";
+import moment from "moment";
+import "../src/assets/css/reset.css";
+import "../src/plugins/element-ui.js";
 
 import axios from "axios";
 axios.defaults.baseURL = "/api";
@@ -10,7 +12,7 @@ axios.interceptors.request.use(
   config => {
     let token = localStorage.getItem("token");
     if (token && config.url != "/user/login") {
-      config.headers.Authorization = token;
+      config.headers.Authorization = "Bearer " + token;
     }
     return config;
   },
@@ -27,8 +29,9 @@ axios.interceptors.response.use(
     switch (error.response.status) {
       case 401:
         router.replace({
-          path: "/"
+          path: "/login"
         });
+        localStorage.removeItem("token");
         break;
       default:
         break;
@@ -36,7 +39,7 @@ axios.interceptors.response.use(
     return Promise.reject(error.response);
   }
 );
-
+Vue.prototype.$moment = moment;
 Vue.config.productionTip = false;
 
 new Vue({

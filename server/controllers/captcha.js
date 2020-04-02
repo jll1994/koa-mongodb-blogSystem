@@ -34,9 +34,6 @@ let createCaptcha = async ctx => {
 };
 
 let verifyCaptcha = async ctx => {
-  ctx.verifyParams({
-    code: { code: String, required: true }
-  });
   const serverCode = ctx.session.code.toLowerCase();
   const clientCode = ctx.query.code.toLowerCase();
   if (serverCode === clientCode) {
