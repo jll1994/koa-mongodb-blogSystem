@@ -90,6 +90,13 @@ export const publishArticle = params => {
     data: params
   });
 };
+export const updateArticle = params => {
+  return axios({
+    method: "put",
+    url: "/article",
+    data: params
+  });
+};
 export const deleteArticle = params => {
   return axios({
     method: "delete",

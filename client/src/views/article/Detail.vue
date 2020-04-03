@@ -7,7 +7,10 @@
           <div>分类：{{info.category}}</div>
           <div>{{info.createTime}}</div>
         </div>
-        <div class="content">{{info.content}}</div>
+        <blockquote>
+          <p>{{info.description}}</p>
+        </blockquote>
+        <div class="content" v-html="info.content"></div>
       </div>
     </div>
     <div class="comment-input">
@@ -46,6 +49,7 @@ import {
   addComment,
   likeComment
 } from "@/api/getData";
+import marked from 'marked'
 export default {
   inject: ["app"],
   data() {
@@ -53,7 +57,6 @@ export default {
       aid: null,
       info: {},
       commentParams: {
-        uid: "",
         aid: "",
         content: ""
       },
@@ -71,12 +74,13 @@ export default {
       getArticleInfoById(this.aid).then(res => {
         let { code, data, msg } = res;
         if (code === 0) {
+          // 将markdown转HTML
+          data.content = marked(data.content)
           this.info = data;
         }
       });
     },
     handleCommentSubmit() {
-      this.commentParams.uid = this.app.userInfo._id;
       this.commentParams.aid = this.aid;
       addComment(this.commentParams).then(res => {
         let { code, msg } = res;
@@ -98,8 +102,7 @@ export default {
     },
     handleLike(id) {
       likeComment({
-        _id: id,
-        uid: this.app.userInfo._id
+        id
       }).then(res => {
         let { code, data, msg } = res;
         if (code === 0) {
@@ -131,11 +134,26 @@ export default {
     padding: 0 25px;
     box-shadow: 0 5px 5px -5px #aaa;
   }
+  blockquote {
+    position: relative;
+    padding-left: 10px;
+    border-left: 3px solid rgba(96, 126, 121, 0.4);
+    background: #f1f1f1;
+    box-shadow: 0 0 5px 0 #ddd;
+    p {
+      line-height: 2;
+      color: #5a5a5a;
+      margin: 10px 0;
+    }
+  }
   .body {
     padding: 0 25px;
     .flexjbac {
       padding: 10px 0;
       color: #777;
+    }
+    .content {
+      padding: 20px 0;
     }
   }
 }

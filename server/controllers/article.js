@@ -1,5 +1,7 @@
 const { ArticleModel, CategoryModel, CommentModel } = require("../models");
 const { callbackModel } = require("../utils/index");
+const { getUserIdByToken } = require("../middleware/token");
+
 // 分类
 let createCategory = async ctx => {
   let { title } = ctx.request.body;
@@ -28,6 +30,10 @@ let getCategoryList = async ctx => {
   } else {
     ctx.status = 500;
   }
+};
+
+let updateCategory = async ctx => {
+  ctx.body = "修改成功";
 };
 
 let deleteCategory = async ctx => {
@@ -60,6 +66,7 @@ let getArticleList = async ctx => {
         title: item.title,
         content: item.content,
         category: item.cid ? item.cid.title : "",
+        description: item.description,
         created: item.createTime
       };
     });
@@ -80,7 +87,7 @@ let getArticleList = async ctx => {
 
 let getArticleInfoById = async ctx => {
   let _id = ctx.params.id;
-  let res = await ArticleModel.findById(_id).populate("cid", "-_id title");
+  let res = await ArticleModel.findById(_id).populate("cid", "title");
   if (res) {
     callbackModel(
       ctx,
@@ -89,7 +96,9 @@ let getArticleInfoById = async ctx => {
         id: res._id,
         uid: res.uid,
         title: res.title,
+        description: res.description,
         content: res.content,
+        cid: res.cid ? res.cid._id : null,
         category: res.cid ? res.cid.title : "",
         createTime: res.createTime
       },
@@ -101,7 +110,9 @@ let getArticleInfoById = async ctx => {
 };
 
 let createArticle = async ctx => {
-  const { uid, title, categoryId, description, content } = ctx.request.body;
+  let token = ctx.get("Authorization").split(" ")[1];
+  let _id = await getUserIdByToken(token); //解析用户
+  const { title, categoryId, description, content } = ctx.request.body;
   if (title === "") {
     callbackModel(ctx, 1, null, "文章标题不能为空");
     return;
@@ -119,14 +130,31 @@ let createArticle = async ctx => {
     return;
   }
   let article = new ArticleModel({
-    uid,
+    uid: _id,
     title,
     cid: categoryId,
+    description,
     content
   });
   let res = await article.save();
   if (res) {
     callbackModel(ctx, 0, null, "文章创建成功");
+  } else {
+    ctx.status = 500;
+  }
+};
+
+let updateArticle = async ctx => {
+  let { id, title, categoryId, description, content } = ctx.request.body;
+  let res = await ArticleModel.findOneAndUpdate(
+    { _id: id },
+    {
+      $set: { title, cid: categoryId, description, content }
+    },
+    { new: true }
+  );
+  if (res) {
+    callbackModel(ctx, 0, null, "修改成功");
   } else {
     ctx.status = 500;
   }
@@ -166,13 +194,15 @@ let getCommentList = async ctx => {
 };
 
 let addComment = async ctx => {
-  let { uid, aid, content } = ctx.request.body;
+  let token = ctx.get("Authorization").split(" ")[1];
+  let _id = await getUserIdByToken(token); //解析用户
+  let { aid, content } = ctx.request.body;
   if (content === "") {
     callbackModel(ctx, 1, null, "评论内容不能为空");
     return;
   }
   let comment = new CommentModel({
-    uid,
+    uid: _id,
     aid,
     content
   });
@@ -185,9 +215,11 @@ let addComment = async ctx => {
 };
 
 let likeComment = async ctx => {
-  let { _id, uid } = ctx.request.body;
+  let token = ctx.get("Authorization").split(" ")[1];
+  let uid = await getUserIdByToken(token); //解析用户
+  let id = ctx.request.body.id;
   let result = await CommentModel.findOne(
-    { _id },
+    { _id: id },
     { uid: true, thumbup: true, isLike: true }
   );
   if (result) {
@@ -198,7 +230,7 @@ let likeComment = async ctx => {
       if (result.isLike) {
         // 已点赞
         let res = await CommentModel.findOneAndUpdate(
-          { _id },
+          { _id: id },
           { $set: { thumbup: --result.thumbup, isLike: false } },
           { new: true }
         );
@@ -209,7 +241,7 @@ let likeComment = async ctx => {
         }
       } else {
         let res = await CommentModel.findOneAndUpdate(
-          { _id },
+          { _id: id },
           { $set: { thumbup: ++result.thumbup, isLike: true } },
           { new: true }
         );
@@ -226,8 +258,10 @@ let likeComment = async ctx => {
 module.exports = {
   createCategory,
   getCategoryList,
+  updateCategory,
   deleteCategory,
   createArticle,
+  updateArticle,
   getArticleList,
   getArticleInfoById,
   deleteArticle,

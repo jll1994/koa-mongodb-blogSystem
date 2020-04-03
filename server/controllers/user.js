@@ -2,7 +2,7 @@ const { UserModel } = require("../models");
 const { generateToken } = require("../middleware/token");
 const { callbackModel } = require("../utils/index");
 const { aesDecrypt } = require("../utils/crypto");
-const mongoose = require("mongoose");
+
 let register = async ctx => {
   let { username, nickname, password, avatar, code } = ctx.request.body;
   let decryptPwd = aesDecrypt(password); // 解密

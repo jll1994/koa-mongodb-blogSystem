@@ -5,7 +5,7 @@ const { UserModel } = require("../models");
 module.exports = {
   // 生成token
   generateToken(payload) {
-    return jwt.sign(payload, TOKEN_ENCODE_STR, { expiresIn: "1h" });
+    return jwt.sign(payload, TOKEN_ENCODE_STR, { expiresIn: "1d" });
   },
   /*
     验证登录token是否正确 => 写成中间件
@@ -42,5 +42,13 @@ module.exports = {
       }
     }
     await next();
+  },
+
+  /*
+    解析token
+  */
+  getUserIdByToken(token) {
+    let result = jwt.verify(token, TOKEN_ENCODE_STR);
+    return result._id;
   }
 };

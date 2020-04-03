@@ -20,6 +20,7 @@ const articleSchema = new Schema({
   },
   cid: { type: Schema.Types.ObjectId, ref: "category", require: true },
   title: String,
+  description: String,
   content: String,
   createTime: {
     type: String,
@@ -29,7 +30,8 @@ const articleSchema = new Schema({
 
 // 分类
 const categorySchema = new Schema({
-  title: String
+  title: String,
+  articleCount: Number
 });
 
 // 评论

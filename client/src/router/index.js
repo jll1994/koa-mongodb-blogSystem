@@ -8,7 +8,7 @@ import Profile from "../views/profile/Index.vue";
 import Article from "../views/article/Index.vue";
 import AddOrEditArticle from "../views/article/AddOrEdit.vue";
 import ArticleDetail from "../views/article/Detail.vue";
-import Message from "../views/message/Index.vue";
+import Label from "../views/label/Index.vue";
 
 Vue.use(VueRouter);
 
@@ -34,7 +34,7 @@ const routes = [
         component: Article
       },
       {
-        path: "/AddOrEditArticle",
+        path: "/AddOrEditArticle/:id?",
         name: "AddOrEditArticle",
         component: AddOrEditArticle
       },
@@ -44,9 +44,9 @@ const routes = [
         component: ArticleDetail
       },
       {
-        path: "/message",
-        name: "Message",
-        component: Message
+        path: "/label",
+        name: "Label",
+        component: Label
       }
     ]
   },
