@@ -7,31 +7,31 @@ const userSchema = new Schema({
   password: String,
   avatar: String,
   createTime: {
-    type: String,
-    default: Date.now
-  }
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // 文章
 const articleSchema = new Schema({
   uid: {
     type: String,
-    required: true
+    required: true,
   },
   cid: { type: Schema.Types.ObjectId, ref: "category", require: true },
   title: String,
   description: String,
   content: String,
   createTime: {
-    type: String,
-    default: Date.now
-  }
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // 分类
 const categorySchema = new Schema({
   title: String,
-  articleCount: Number
+  articleCount: Number,
 });
 
 // 评论
@@ -42,16 +42,16 @@ const commentSchema = new Schema({
   // 点赞数
   thumbup: {
     type: Number,
-    default: 0
+    default: 0,
   },
   isLike: {
     type: Boolean,
-    default: false
+    default: false,
   },
   createTime: {
-    type: String,
-    default: Date.now
-  }
+    type: Date,
+    default: Date.now,
+  },
 });
 
 exports.UserModel = model("user", userSchema);

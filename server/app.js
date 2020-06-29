@@ -6,6 +6,7 @@ const bouncer = require("koa-bouncer");
 const koaBody = require("koa-body");
 const static = require("koa-static");
 const path = require("path");
+const { port } = require("./config");
 const { verifyToken } = require("./middleware/token");
 // 实例化koa
 const app = new Koa();
@@ -18,18 +19,12 @@ const CONFIG = {
   httpOnly: true,
   signed: true,
   rolling: false,
-  renew: false
+  renew: false,
 };
 app.use(session(CONFIG, app));
 app.use(cors());
 app.use(parameter(app));
 app.use(bouncer.middleware());
-//设置静态资源的路径
-const staticPath = "./static";
-app.use(static(path.join(__dirname, staticPath)));
-// 添加token 验证中间件
-app.use(verifyToken);
-
 app.use(
   koaBody({
     multipart: true, // 支持文件上传
@@ -42,10 +37,13 @@ app.use(
         const dir = path.join(__dirname, `static/upload`);
         // 重新覆盖 file.path 属性
         file.path = `${dir}/${file.name}`;
-      }
-    }
+      },
+    },
   })
 );
+app.use(static(__dirname, "static"));
+// 添加token 验证中间件
+app.use(verifyToken);
 
 // routes
 const routers = require("./router");
@@ -56,6 +54,6 @@ app.on("error", (err, ctx) => {
 });
 
 // 设置端口监听
-app.listen(8191, () => {
-  console.log(`server is running on port 8191`);
+app.listen(port, () => {
+  console.log(`server is running on port ${port}`);
 });

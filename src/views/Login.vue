@@ -36,7 +36,6 @@
 
 <script>
 import { login, getCaptcha, verifyCode } from "@/api/getData.js";
-import { aesEncrypt } from "@/utils/crypto.js";
 export default {
   name: "Login",
   data() {
@@ -57,17 +56,17 @@ export default {
       loginForm: {
         username: "",
         password: "",
-        code: ""
+        code: "",
       },
       loginRules: {
         username: [
-          { required: true, message: "请输入用户名", trigger: "blur" }
+          { required: true, message: "请输入用户名", trigger: "blur" },
         ],
         password: [{ required: true, message: "请输入密码", trigger: "blur" }],
-        code: [{ validator: validateCode, trigger: "blur" }]
+        code: [{ validator: validateCode, trigger: "blur" }],
       },
       loginStatus: false,
-      svgData: ""
+      svgData: "",
     };
   },
   created() {
@@ -81,7 +80,7 @@ export default {
           let { username, password } = this.loginForm;
           login({
             username,
-            password: aesEncrypt(password)
+            password,
           }).then(res => {
             this.loginStatus = false;
             let { code, data, msg } = res;
@@ -102,8 +101,8 @@ export default {
           this.svgData = res;
         }
       });
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="less">

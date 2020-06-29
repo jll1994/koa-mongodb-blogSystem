@@ -33,8 +33,8 @@
               <span class="reply" @click="replyClick(index)">回复</span>
             </div>
             <div class="reply-box flexjbac" v-if="replyIndex===index">
-              <el-input class="input" v-model="commentParams.content" :placeholder="'回复'+item.nickname"></el-input>
-              <el-button type="primary" @click="handleCommentSubmit">评论</el-button>
+              <el-input class="input" v-model="replyParams.content" :placeholder="'回复'+item.nickname"></el-input>
+              <el-button type="primary" @click="handleReplySubmit">评论</el-button>
             </div>
           </div>
         </div>
@@ -47,9 +47,9 @@ import {
   getArticleInfoById,
   getCommentList,
   addComment,
-  likeComment
+  likeComment,
 } from "@/api/getData";
-import marked from 'marked'
+import marked from "marked";
 export default {
   inject: ["app"],
   data() {
@@ -58,10 +58,13 @@ export default {
       info: {},
       commentParams: {
         aid: "",
-        content: ""
+        content: "",
       },
       comments: [],
-      replyIndex: -1
+      replyIndex: -1,
+      replyParams: {
+        content: "",
+      },
     };
   },
   mounted() {
@@ -75,7 +78,7 @@ export default {
         let { code, data, msg } = res;
         if (code === 0) {
           // 将markdown转HTML
-          data.content = marked(data.content)
+          data.content = marked(data.content);
           this.info = data;
         }
       });
@@ -102,7 +105,7 @@ export default {
     },
     handleLike(id) {
       likeComment({
-        id
+        id,
       }).then(res => {
         let { code, data, msg } = res;
         if (code === 0) {
@@ -114,8 +117,9 @@ export default {
     },
     replyClick(index) {
       this.replyIndex = index;
-    }
-  }
+    },
+    handleReplySubmit() {},
+  },
 };
 </script>
 <style lang="less" scoped>

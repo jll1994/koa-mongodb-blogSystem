@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { TOKEN_ENCODE_STR, URL_YES_PASS } = require("../utils/config");
+const { TOKEN_ENCODE_STR, URL_YES_PASS } = require("../config");
 const { UserModel } = require("../models");
 
 module.exports = {
@@ -13,8 +13,11 @@ module.exports = {
   */
   async verifyToken(ctx, next) {
     let url = ctx.url;
+    if (url === "/favicon.ico") {
+      return;
+    }
     let tempUrl = url.indexOf("?") !== -1 ? url.split("?")[0] : url; //处理url可能有参数的情况 例：url?key=value
-    if (!URL_YES_PASS.includes(tempUrl)) {
+    if (tempUrl.indexOf("/api") !== -1 && !URL_YES_PASS.includes(tempUrl)) {
       // ctx.get("Authorization") 获取前端请求体中的信息
       let token = ctx.get("Authorization").split(" ")[1];
       if (token == "") {
@@ -50,5 +53,5 @@ module.exports = {
   getUserIdByToken(token) {
     let result = jwt.verify(token, TOKEN_ENCODE_STR);
     return result._id;
-  }
+  },
 };

@@ -1,11 +1,9 @@
 const { UserModel } = require("../models");
 const { generateToken } = require("../middleware/token");
 const { callbackModel } = require("../utils/index");
-const { aesDecrypt } = require("../utils/crypto");
-
-let register = async ctx => {
+const Crypt = require("../utils/crypt");
+let register = async (ctx) => {
   let { username, nickname, password, avatar, code } = ctx.request.body;
-  let decryptPwd = aesDecrypt(password); // 解密
   try {
     if (username === "") {
       callbackModel(ctx, 1, null, "用户名不能为空");
@@ -27,8 +25,8 @@ let register = async ctx => {
     let user = new UserModel({
       username,
       nickname,
-      password: decryptPwd,
-      avatar
+      password: Crypt.encrypt(password),
+      avatar,
     });
     res = await user.save();
     if (res._id != null) {
@@ -40,7 +38,7 @@ let register = async ctx => {
           _id: res._id,
           nickname,
           avatar,
-          token
+          token,
         },
         "注册成功"
       );
@@ -52,26 +50,30 @@ let register = async ctx => {
   }
 };
 
-let login = async ctx => {
+let login = async (ctx) => {
   let { username, password } = ctx.request.body;
-  let decryptPwd = aesDecrypt(password); // 解密
-  let user = await UserModel.findOne({ username, password: decryptPwd });
+  let user = await UserModel.findOne({ username });
   if (user) {
-    const user_id = user._id;
-    callbackModel(
-      ctx,
-      0,
-      {
-        token: generateToken({ _id: user_id })
-      },
-      "登录成功"
-    );
+    const user_id = user._id,
+      checkPwd = Crypt.decrypt(password, user.password);
+    if (checkPwd) {
+      callbackModel(
+        ctx,
+        0,
+        {
+          token: generateToken({ _id: user_id }),
+        },
+        "登录成功"
+      );
+    } else {
+      callbackModel(ctx, 1, null, "登录失败，用户名或者密码错误");
+    }
   } else {
-    callbackModel(ctx, 1, null, "登录失败，用户名或者密码错误");
+    callbackModel(ctx, 1, null, `${username}用户名不存在`);
   }
 };
 
-let getUserInfo = async ctx => {
+let getUserInfo = async (ctx) => {
   let _id = ctx._id;
   try {
     let res = await UserModel.findOne(
@@ -79,7 +81,7 @@ let getUserInfo = async ctx => {
       {
         username: true,
         nickname: true,
-        avatar: true
+        avatar: true,
       }
     );
     callbackModel(ctx, 0, res, "查询成功");
@@ -88,7 +90,7 @@ let getUserInfo = async ctx => {
   }
 };
 
-let updateNickname = async ctx => {
+let updateNickname = async (ctx) => {
   let { nickname } = ctx.request.body;
   let _id = ctx._id;
   let res = await UserModel.updateOne({ _id }, { $set: { nickname } });
@@ -99,7 +101,7 @@ let updateNickname = async ctx => {
   }
 };
 
-let updateAvatar = async ctx => {
+let updateAvatar = async (ctx) => {
   let { avatar } = ctx.request.body;
   let _id = ctx._id;
   let res = await UserModel.updateOne({ _id }, { $set: { avatar } });
@@ -115,5 +117,5 @@ module.exports = {
   login,
   getUserInfo,
   updateNickname,
-  updateAvatar
+  updateAvatar,
 };

@@ -8,7 +8,7 @@ import Profile from "../views/profile/Index.vue";
 import Article from "../views/article/Index.vue";
 import AddOrEditArticle from "../views/article/AddOrEdit.vue";
 import ArticleDetail from "../views/article/Detail.vue";
-import Label from "../views/label/Index.vue";
+import Category from "../views/category/Index.vue";
 
 Vue.use(VueRouter);
 
@@ -21,51 +21,51 @@ const routes = [
       {
         path: "/home",
         name: "Home",
-        component: Home
+        component: Home,
       },
       {
         path: "/profile",
         name: "Profile",
-        component: Profile
+        component: Profile,
       },
       {
         path: "/article",
         name: "Article",
-        component: Article
+        component: Article,
       },
       {
         path: "/AddOrEditArticle/:id?",
         name: "AddOrEditArticle",
-        component: AddOrEditArticle
+        component: AddOrEditArticle,
       },
       {
         path: "/articleDetail",
         name: "ArticleDetail",
-        component: ArticleDetail
+        component: ArticleDetail,
       },
       {
-        path: "/label",
-        name: "Label",
-        component: Label
-      }
-    ]
+        path: "/category",
+        name: "Category",
+        component: Category,
+      },
+    ],
   },
   {
     path: "/login",
     name: "Login",
-    component: Login
+    component: Login,
   },
   {
     path: "/register",
     name: "Register",
-    component: Register
-  }
+    component: Register,
+  },
 ];
 
 const router = new VueRouter({
   mode: "history",
   base: process.env.BASE_URL,
-  routes
+  routes,
 });
 
 export default router;

@@ -60,11 +60,10 @@
 <script>
 import { getCaptcha, verifyCode, register } from "@/api/getData.js";
 import { VueCropper } from "vue-cropper";
-import { aesEncrypt } from "@/utils/crypto.js";
 export default {
   name: "register",
   components: {
-    VueCropper
+    VueCropper,
   },
   data() {
     const validatePwd = (rule, value, callback) => {
@@ -116,14 +115,14 @@ export default {
         password: "",
         confirmPassword: "",
         code: "",
-        avatar: ""
+        avatar: "",
       },
       registerRules: {
         nickname: [{ required: true, message: "请输入昵称", trigger: "blur" }],
         username: [{ validator: validateUsername, trigger: "blur" }],
         password: [{ validator: validatePwd, trigger: "blur" }],
         confirmPassword: [{ validator: validateRepwd, trigger: "blur" }],
-        code: [{ validator: validateCode, trigger: "blur" }]
+        code: [{ validator: validateCode, trigger: "blur" }],
       },
       registerStatus: false,
       cropper_box_mark: false,
@@ -132,9 +131,9 @@ export default {
         autoCrop: true,
         autoCropWidth: 400,
         autoCropHeight: 400,
-        fixedBox: true
+        fixedBox: true,
       },
-      svgData: ""
+      svgData: "",
     };
   },
   created() {
@@ -204,7 +203,7 @@ export default {
         avatar,
         username,
         nickname,
-        password: aesEncrypt(password)
+        password,
       });
       let { code, data, msg } = res;
       if (code === 0) {
@@ -213,8 +212,8 @@ export default {
       } else {
         this.$message.error(msg);
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
