@@ -22,6 +22,7 @@ const routers = router
   .delete("/article/:id", controller.article.deleteArticle) // 删除文章
   .get("/comment", controller.article.getCommentList) // 评论列表
   .post("/comment", controller.article.addComment) // 添加评论
+  .post("/comment/reply", controller.article.addCommentReply) // 添加评论回复
   .put("/comment/like", controller.article.likeComment); // 评论点赞
 // 导出路由
 module.exports = routers;

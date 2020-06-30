@@ -35,6 +35,7 @@
 </template>
 
 <script>
+import { mutations,actions } from "@/store";
 import { login, getCaptcha, verifyCode } from "@/api/getData.js";
 export default {
   name: "Login",
@@ -85,7 +86,9 @@ export default {
             this.loginStatus = false;
             let { code, data, msg } = res;
             if (code === 0) {
-              localStorage.setItem("token", data.token);
+              mutations.setToken(data.token)
+              // 用户信息
+              actions.loadUserInfo();
               this.$router.push("/home");
             } else {
               this.changeCaptcha();

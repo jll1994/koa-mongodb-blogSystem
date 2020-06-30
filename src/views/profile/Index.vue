@@ -2,7 +2,7 @@
   <div class="account-info">
     <div class="avatar">
       <a href="javascript:;">
-        <img :src="app.userInfo.avatar" alt="">
+        <img :src="userInfo.avatar" alt="">
       </a>
       <p>
         <input type="file" id='avater' accept="image/*" @change="handleFileUpload">
@@ -11,22 +11,24 @@
     </div>
     <p class="info-item">
       <label>用户名</label>
-      <span>{{app.userInfo.username}}</span>
+      <span>{{userInfo.username}}</span>
     </p>
     <p class="info-item">
       <label>昵称</label>
-      <span>{{app.userInfo.nickname}}</span>
-      <a class="edit" @click="handleUpdateNickname">修改</a>
+      <span>{{userInfo.nickname}}</span>
+      <a class="edit" @click="handleUpdateNickname(userInfo.nickname)">修改</a>
     </p>
   </div>
 </template>
 
 <script>
+import { store, actions } from "@/store";
 import { updateAvatar, updateNickname } from "@/api/getData.js";
 export default {
-  inject: ["app"],
-  data() {
-    return {};
+  computed: {
+    userInfo() {
+      return store.userInfo;
+    },
   },
   methods: {
     handleFileUpload(e) {
@@ -38,7 +40,7 @@ export default {
           let { code, data, msg } = res;
           if (code === 0) {
             this.$message.success("修改成功");
-            this.app.getUserInfo();
+            actions.loadUserInfo();
           } else {
             this.$message.error(msg);
           }
@@ -46,25 +48,26 @@ export default {
       };
       document.getElementById("avater").value = "";
     },
-    handleUpdateNickname() {
+    handleUpdateNickname(nickname) {
       this.$msgBox
         .prompt("请输入昵称", "提示", {
           confirmButtonText: "确定",
-          cancelButtonText: "取消"
+          cancelButtonText: "取消",
+          inputValue: nickname,
         })
         .then(({ value }) => {
           updateNickname({ nickname: value }).then(res => {
             let { code, msg } = res;
             if (code === 0) {
               this.$message.success("修改成功");
-              this.app.getUserInfo();
+              actions.loadUserInfo();
             } else {
               this.$message.error(msg);
             }
           });
         });
-    }
-  }
+    },
+  },
 };
 </script>
 <style lang="less" scoped>

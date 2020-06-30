@@ -14,7 +14,7 @@
       </div>
     </div>
     <div class="comment-input">
-      <el-avatar :src="app.userInfo.avatar"></el-avatar>
+      <el-avatar :src="userInfo.avatar"></el-avatar>
       <el-input class="input" v-model="commentParams.content" placeholder="请输入评论内容"></el-input>
       <el-button type="primary" @click="handleCommentSubmit">评论</el-button>
     </div>
@@ -34,7 +34,7 @@
             </div>
             <div class="reply-box flexjbac" v-if="replyIndex===index">
               <el-input class="input" v-model="replyParams.content" :placeholder="'回复'+item.nickname"></el-input>
-              <el-button type="primary" @click="handleReplySubmit">评论</el-button>
+              <el-button type="primary" @click="handleReplySubmit(item.uid)">评论</el-button>
             </div>
           </div>
         </div>
@@ -48,10 +48,11 @@ import {
   getCommentList,
   addComment,
   likeComment,
+  addCommentReply,
 } from "@/api/getData";
+import { store } from "@/store";
 import marked from "marked";
 export default {
-  inject: ["app"],
   data() {
     return {
       aid: null,
@@ -66,6 +67,11 @@ export default {
         content: "",
       },
     };
+  },
+  computed: {
+    userInfo() {
+      return store.userInfo;
+    },
   },
   mounted() {
     this.aid = this.$route.query.id;
@@ -118,7 +124,14 @@ export default {
     replyClick(index) {
       this.replyIndex = index;
     },
-    handleReplySubmit() {},
+    handleReplySubmit(uid) {
+      addCommentReply({
+        uid,
+        content: this.replyParams.content,
+      }).then(res => {
+        console.log(res);
+      });
+    },
   },
 };
 </script>

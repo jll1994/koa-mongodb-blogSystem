@@ -265,6 +265,13 @@ let addComment = async (ctx) => {
   }
 };
 
+let addCommentReply = async (ctx) => {
+  let { uid, content } = ctx.request.body;
+  console.log(uid);
+  console.log(content);
+  ctx.body = "评论回复成功";
+};
+
 let likeComment = async (ctx) => {
   let token = ctx.get("Authorization").split(" ")[1];
   let uid = await getUserIdByToken(token); //解析用户
@@ -318,5 +325,6 @@ module.exports = {
   deleteArticle,
   getCommentList,
   addComment,
+  addCommentReply,
   likeComment,
 };

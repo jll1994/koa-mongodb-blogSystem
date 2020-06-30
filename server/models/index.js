@@ -39,6 +39,15 @@ const commentSchema = new Schema({
   uid: { type: Schema.Types.ObjectId, ref: "user", require: true },
   aid: { type: Schema.Types.ObjectId, ref: "article", require: true },
   content: String,
+  reply: [
+    {
+      content: String,
+      createTime: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+  ],
   // 点赞数
   thumbup: {
     type: Number,

@@ -120,6 +120,13 @@ export const addComment = (params) => {
     data: params,
   });
 };
+export const addCommentReply = (params) => {
+  return axios({
+    method: "post",
+    url: "/comment/reply",
+    data: params,
+  });
+};
 export const likeComment = (params) => {
   return axios({
     method: "put",
