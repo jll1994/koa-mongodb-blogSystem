@@ -110,6 +110,15 @@ export const deleteArticle = (params) => {
     url: "/article/" + params,
   });
 };
+// 收藏
+export const operateCollect = (params) => {
+  return axios({
+    method: "post",
+    url: "/collect",
+    data: params,
+  });
+};
+// 评论
 export const getCommentList = (params) => {
   return axios.get(`/comment?aid=${params}`);
 };
@@ -120,17 +129,25 @@ export const addComment = (params) => {
     data: params,
   });
 };
-export const addCommentReply = (params) => {
+// 回复
+export const addReply = (params) => {
   return axios({
     method: "post",
-    url: "/comment/reply",
+    url: "/reply",
     data: params,
   });
 };
-export const likeComment = (params) => {
+export const deleteReply = (params) => {
   return axios({
-    method: "put",
-    url: "/comment/like",
+    method: "delete",
+    url: "/reply/" + params,
+  });
+};
+// 点赞
+export const operateLike = (params) => {
+  return axios({
+    method: "post",
+    url: "/like",
     data: params,
   });
 };

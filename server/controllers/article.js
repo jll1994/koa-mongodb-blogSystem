@@ -1,4 +1,11 @@
-const { ArticleModel, CategoryModel, CommentModel } = require("../models");
+const {
+  ArticleModel,
+  CategoryModel,
+  CommentModel,
+  ReplyModel,
+  CollectModel,
+  LikeModel,
+} = require("../models");
 const { callbackModel } = require("../utils/index");
 const { getUserIdByToken } = require("../middleware/token");
 const { codeConfig } = require("../config");
@@ -137,21 +144,31 @@ let getArticleList = async (ctx) => {
 };
 
 let getArticleInfoById = async (ctx) => {
-  let _id = ctx.params.id;
-  let res = await ArticleModel.findById(_id).populate("cid", "title");
+  let token = ctx.get("Authorization").split(" ")[1];
+  let uid = await getUserIdByToken(token); //解析用户
+  let aid = ctx.params.id;
+  let res = await ArticleModel.findById({ _id: aid }).populate("cid", "title");
+  let collect = await CollectModel.findOne({ uid, aid }, "status");
+  let collects = await CollectModel.find({ aid });
+  let like = await LikeModel.findOne({ uid, typeId: aid }, "status");
+  let likes = await LikeModel.find({ typeId: aid });
   if (res) {
+    let { _id: id, cid, title, description, content, createTime } = res;
     callbackModel(
       ctx,
       codeConfig.success,
       {
-        id: res._id,
-        uid: res.uid,
-        title: res.title,
-        description: res.description,
-        content: res.content,
-        cid: res.cid ? res.cid._id : null,
-        category: res.cid ? res.cid.title : "",
-        createTime: formatTime(res.createTime),
+        id,
+        title,
+        description,
+        content,
+        cid: cid ? cid._id : null,
+        category: cid ? cid.title : "",
+        isCollect: collect ? collect.status : false,
+        collectCount: collects ? collects.length : 0,
+        isLike: like ? like.status : false,
+        likeCount: likes ? likes.length : 0,
+        createTime: formatTime(createTime),
       },
       "查询成功"
     );
@@ -221,23 +238,82 @@ let deleteArticle = async (ctx) => {
   }
 };
 
+// 收藏
+let collectArticle = async (ctx) => {
+  let token = ctx.get("Authorization").split(" ")[1];
+  let uid = await getUserIdByToken(token); //解析用户
+  let { aid, status } = ctx.request.body;
+  let result = await CollectModel.findOne({ uid, aid });
+  if (!result) {
+    let collect = new CollectModel({
+      uid,
+      aid,
+      status,
+    });
+    let res = await collect.save();
+    if (res) {
+      callbackModel(ctx, codeConfig.success, null, "收藏成功");
+    } else {
+      ctx.status = 500;
+    }
+  } else {
+    let collectFlag = result.status;
+    if (collectFlag === status) {
+      callbackModel(ctx, codeConfig.error, null, status ? "已收藏" : "未收藏");
+    }
+    let doc = await CollectModel.findOneAndUpdate(
+      { uid, aid },
+      { $set: { status } },
+      { new: true }
+    );
+    if (doc) {
+      callbackModel(
+        ctx,
+        codeConfig.success,
+        null,
+        status ? "已收藏" : "取消收藏"
+      );
+    }
+  }
+};
+
 // 评论
 let getCommentList = async (ctx) => {
+  let token = ctx.get("Authorization").split(" ")[1];
+  let accountId = await getUserIdByToken(token); //解析用户
   let { aid } = ctx.query;
+  let article = await ArticleModel.findById({ _id: aid });
   // 连表查询
-  let res = await CommentModel.find({ aid }).populate("uid", "nickname avatar");
+  let res = await CommentModel.find({ aid }).populate(
+    "commentId",
+    "nickname avatar"
+  );
   if (res) {
-    let tempArr = res.map((item) => {
+    let tempArr = [];
+    for (let i = 0; i < res.length; i++) {
+      let item = res[i];
+      let { _id: id, content, commentId } = item;
+      let { _id: userId, nickname, avatar } = commentId;
+      let isAuthor = userId == article.uid; //此处不能使用严格相同===,否则会一直是false
+      let replyList = await ReplyModel.find({ commentId: id }).populate(
+        "from to",
+        "nickname avatar"
+      );
+      let like = await LikeModel.findOne({ uid: accountId, typeId: id });
+      let likes = await LikeModel.find({ typeId: id, status: true });
       let map = {};
-      map["avatar"] = item.uid.avatar;
-      map["nickname"] = item.uid.nickname;
-      map["uid"] = item.uid._id;
-      map["_id"] = item._id;
-      map["content"] = item.content;
-      map["thumbup"] = item.thumbup;
+      map["id"] = id;
+      map["content"] = content;
+      map["avatar"] = avatar;
+      map["nickname"] = nickname;
+      map["uid"] = userId;
+      map["isAuthor"] = isAuthor;
+      map["isLike"] = like ? like.status : false;
+      map["likeCount"] = likes.length;
+      map["comments"] = [...replyList];
       map["createTime"] = formatTime(item.createTime);
-      return map;
-    });
+      tempArr.push(map);
+    }
     callbackModel(ctx, codeConfig.success, tempArr, "查询成功");
   } else {
     ctx.status = 500;
@@ -246,14 +322,14 @@ let getCommentList = async (ctx) => {
 
 let addComment = async (ctx) => {
   let token = ctx.get("Authorization").split(" ")[1];
-  let _id = await getUserIdByToken(token); //解析用户
+  let commentId = await getUserIdByToken(token); //解析用户
   let { aid, content } = ctx.request.body;
   if (content === "") {
     callbackModel(ctx, codeConfig.error, null, "评论内容不能为空");
     return;
   }
   let comment = new CommentModel({
-    uid: _id,
+    commentId,
     aid,
     content,
   });
@@ -265,50 +341,72 @@ let addComment = async (ctx) => {
   }
 };
 
-let addCommentReply = async (ctx) => {
-  let { uid, content } = ctx.request.body;
-  console.log(uid);
-  console.log(content);
-  ctx.body = "评论回复成功";
+// 回复
+let addReply = async (ctx) => {
+  let token = ctx.get("Authorization").split(" ")[1];
+  let from_userId = await getUserIdByToken(token); //解析用户
+  let { commentId, type, to, content } = ctx.request.body;
+  let reply = new ReplyModel({
+    commentId,
+    type,
+    content,
+    from: from_userId,
+    to,
+  });
+  let res = await reply.save();
+  if (res) {
+    callbackModel(ctx, codeConfig.success, null, "评论成功");
+  } else {
+    ctx.status = 500;
+  }
 };
 
-let likeComment = async (ctx) => {
+let deleteReply = async (ctx) => {
+  let _id = ctx.params.id;
+  let res = await ReplyModel.findByIdAndRemove(_id);
+  if (res) {
+    callbackModel(ctx, codeConfig.success, null, "删除成功");
+  } else {
+    ctx.status = 500;
+  }
+};
+
+// 点赞
+let operateLike = async (ctx) => {
   let token = ctx.get("Authorization").split(" ")[1];
   let uid = await getUserIdByToken(token); //解析用户
-  let id = ctx.request.body.id;
-  let result = await CommentModel.findOne(
-    { _id: id },
-    { uid: true, thumbup: true, isLike: true }
-  );
-  if (result) {
-    if (uid.toString() === result.uid.toString()) {
-      // 表示是自己的评论
-      callbackModel(ctx, codeConfig.error, null, "不能给自己的评论点赞哟");
+  let { type, typeId, status } = ctx.request.body;
+  let result = await LikeModel.findOne({ uid, typeId }, "status");
+  if (!result) {
+    let like = new LikeModel({
+      uid,
+      type,
+      typeId,
+      status,
+    });
+    let res = await like.save();
+    if (res) {
+      callbackModel(ctx, codeConfig.success, null, "点赞成功");
     } else {
-      if (result.isLike) {
-        // 已点赞
-        let res = await CommentModel.findOneAndUpdate(
-          { _id: id },
-          { $set: { thumbup: --result.thumbup, isLike: false } },
-          { new: true }
-        );
-        if (res) {
-          callbackModel(ctx, codeConfig.success, null, "取消点赞");
-        } else {
-          ctx.status = 500;
-        }
-      } else {
-        let res = await CommentModel.findOneAndUpdate(
-          { _id: id },
-          { $set: { thumbup: ++result.thumbup, isLike: true } },
-          { new: true }
-        );
-        if (res) {
-          callbackModel(ctx, codeConfig.success, null, "点赞成功");
-        } else {
-          ctx.status = 500;
-        }
-      }
+      ctx.status = 500;
+    }
+  } else {
+    let likeFlag = result.status;
+    if (likeFlag === status) {
+      callbackModel(ctx, codeConfig.error, null, status ? "已点赞" : "未点赞");
+    }
+    let doc = await LikeModel.findOneAndUpdate(
+      { uid, typeId },
+      { $set: { status } },
+      { new: true }
+    );
+    if (doc) {
+      callbackModel(
+        ctx,
+        codeConfig.success,
+        null,
+        status ? "已点赞" : "取消点赞"
+      );
     }
   }
 };
@@ -323,8 +421,10 @@ module.exports = {
   getArticleList,
   getArticleInfoById,
   deleteArticle,
+  collectArticle,
   getCommentList,
   addComment,
-  addCommentReply,
-  likeComment,
+  addReply,
+  deleteReply,
+  operateLike,
 };

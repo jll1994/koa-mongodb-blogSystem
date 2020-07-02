@@ -36,7 +36,7 @@
 
 <script>
 import { mutations,actions } from "@/store";
-import { login, getCaptcha, verifyCode } from "@/api/getData.js";
+import { login, getCaptcha, verifyCode } from "@/api/getData";
 export default {
   name: "Login",
   data() {

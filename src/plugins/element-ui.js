@@ -14,8 +14,9 @@ import {
   Icon,
   Tag,
   Avatar,
+  Badge,
   Message,
-  MessageBox
+  MessageBox,
 } from "element-ui";
 Vue.use(Row);
 Vue.use(Col);
@@ -31,6 +32,7 @@ Vue.use(Option);
 Vue.use(Icon);
 Vue.use(Tag);
 Vue.use(Avatar);
+Vue.use(Badge);
 
 Vue.prototype.$message = Message;
 Vue.prototype.$msgBox = MessageBox;

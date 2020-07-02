@@ -58,7 +58,8 @@
   </div>
 </template>
 <script>
-import { getCaptcha, verifyCode, register } from "@/api/getData.js";
+import { getCaptcha, verifyCode, register } from "@/api/getData";
+import { mutations, actions } from "@/store";
 import { VueCropper } from "vue-cropper";
 export default {
   name: "register",
@@ -207,7 +208,9 @@ export default {
       });
       let { code, data, msg } = res;
       if (code === 0) {
-        localStorage.setItem("token", data.token);
+        mutations.setToken(data.token);
+        // 用户信息
+        actions.loadUserInfo();
         this.$router.push("/home");
       } else {
         this.$message.error(msg);

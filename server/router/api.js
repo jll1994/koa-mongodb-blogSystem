@@ -20,9 +20,11 @@ const routers = router
   .post("/article", controller.article.createArticle) // 创建文章
   .put("/article", controller.article.updateArticle) // 修改文章
   .delete("/article/:id", controller.article.deleteArticle) // 删除文章
+  .post("/collect", controller.article.collectArticle) // 收藏文章
   .get("/comment", controller.article.getCommentList) // 评论列表
   .post("/comment", controller.article.addComment) // 添加评论
-  .post("/comment/reply", controller.article.addCommentReply) // 添加评论回复
-  .put("/comment/like", controller.article.likeComment); // 评论点赞
+  .post("/reply", controller.article.addReply) // 添加回复
+  .delete("/reply/:id", controller.article.deleteReply) // 删除回复
+  .post("/like", controller.article.operateLike); // 点赞
 // 导出路由
 module.exports = routers;
